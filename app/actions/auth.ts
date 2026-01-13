@@ -22,26 +22,27 @@ export const signIn = async (formData: FormData) => {
   redirect("/dashboard");
 };
 
-export const signUp = async (formData: FormData) => {
+export async function signUp(formData: FormData) {
   const supabase = await createClient();
 
-  const data = {
-    email: formData.get("email") as string,
-    password: formData.get("password") as string,
+  const email = String(formData.get("email") || "");
+  const password = String(formData.get("password") || "");
+  const name = String(formData.get("name") || "");
+
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
     options: {
-        data: {name: formData.get("name") as string}
-    }
-  };
+      data: { name },
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+    },
+  });
 
-  const { error } = await supabase.auth.signUp(data);
+  if (error) return { error: error.message };
 
-  if (error) {
-    return { error: error.message };
-  }
+  redirect(`/check-email?email=${encodeURIComponent(email)}`);
+}
 
-  revalidatePath("/", "layout");
-  redirect("/dashboard");
-};
 
 export const signOut = async () => {
   const supabase = await createClient();
