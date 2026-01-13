@@ -30,9 +30,20 @@ export async function proxy(request: NextRequest) {
   data: { user },
 } = await supabase.auth.getUser();
 
-if (user && request.nextUrl.pathname.startsWith("/dashboard")) {
+if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
   const url = request.nextUrl.clone();
   url.pathname = "/login";
   return NextResponse.redirect(url);
 }
+
+
+if 
+(user && request.nextUrl.pathname === "/login" ||
+    request.nextUrl.pathname === "/register"
+) {
+  const url = request.nextUrl.clone();
+  url.pathname = "/dashboard";
+  return NextResponse.redirect(url);
+}
+    return supabaseResponse;
 }
