@@ -24,7 +24,7 @@ export const AuthForm = ({action, isRegister = false } :AuthformProps ) => {
      return (
   <form action={handleSubmit} className="w-full space-y-4 bg-white">
     {error && (
-      <div className="rounded-md border border-black bg-white text-sm text-black p-3">
+      <div className="rounded-md border border-red bg-white text-sm text-black p-3">
         {error}
       </div>
     )}
