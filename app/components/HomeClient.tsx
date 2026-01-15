@@ -165,7 +165,7 @@ export default function HomeClient(props: {
 
           {/* Date icon only */}
           <div className="flex items-center gap-2">
-            <div className="relative">
+            <div className="relative ">
               {/* Hidden date input that still submits */}
               <input
                 ref={dateInputRef}
@@ -179,7 +179,7 @@ export default function HomeClient(props: {
               <button
                 type="button"
                 onClick={() => dateInputRef.current?.showPicker?.() || dateInputRef.current?.click()}
-                className="flex items-center justify-center rounded-2xl border border-black/15 bg-white p-3 text-black/70 outline-none hover:border-black/30"
+                className="flex items-center justify-center rounded-2xl border border-black/15 bg-white p-3 text-black/70 outline-none hover:border-black/30 c"
                 title="Pick a date"
               >
                 <CalendarIcon className="h-5 w-5" />
@@ -187,7 +187,7 @@ export default function HomeClient(props: {
             </div>
 
             {/* Apply */}
-            <button className="rounded-2xl bg-black px-5 py-3 text-sm font-medium text-white hover:opacity-90">
+            <button className="rounded-2xl bg-black px-5 py-3 text-sm font-medium text-white hover:opacity-90 cursor-pointer">
               Apply
             </button>
 
@@ -204,7 +204,7 @@ export default function HomeClient(props: {
         </form>
 
         {/* POSTS */}
-        <div className="mt-8 grid grid-cols-1 gap-4">
+        <div className="mt-8 grid grid-cols-1 gap-4 hover:mouse-pointer">
           {posts.map((post) => {
             const dateStr = new Date(post.created_at).toLocaleDateString();
 

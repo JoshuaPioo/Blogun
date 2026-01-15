@@ -138,7 +138,7 @@ export default async function DashboardPage({
               Community
             </Link>
             <form action={signOut}>
-              <button className="rounded-xl border border-black px-4 py-2 text-sm">
+              <button className="rounded-xl border border-black px-4 py-2 text-sm cursor-pointer">
                 Logout
               </button>
             </form>
@@ -190,14 +190,14 @@ export default async function DashboardPage({
 
               <label
                 htmlFor="date"
-                className="flex cursor-pointer items-center justify-center rounded-2xl border border-black/15 bg-white p-3 text-black/70 hover:border-black/30"
+                className="flex items-center justify-center rounded-2xl border border-black/15 bg-white p-3 text-black/70 hover:border-black/30"
                 title="Pick a date"
               >
                 <CalendarIcon className="h-5 w-5" />
               </label>
             </div>
 
-            <button className="rounded-2xl bg-black px-5 py-3 text-sm font-medium text-white hover:opacity-90">
+            <button className="rounded-2xl bg-black px-5 py-3 text-sm font-medium text-white hover:opacity-90 cursor-pointer">
               Apply
             </button>
 
@@ -246,7 +246,7 @@ export default async function DashboardPage({
                       await deletePost(post.id);
                     }}
                   >
-                    <button className="rounded-xl border border-red-500 px-4 py-2 text-sm text-red-600 hover:bg-red-600 hover:text-white">
+                    <button className="rounded-xl border border-red-500 px-4 py-2 text-sm text-red-600 hover:bg-red-600 hover:text-white cursor-pointer">
                       Delete
                     </button>
                   </form>

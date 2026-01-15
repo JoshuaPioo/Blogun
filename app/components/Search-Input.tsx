@@ -14,7 +14,7 @@ export default function SearchBar() {
 
   return (
     <input
-      placeholder="Search by title, author, or date..."
+      placeholder="Search by title, author"
       className="w-full rounded-xl border border-black/20 p-3"
       defaultValue={params.get("q") ?? ""}
       onChange={(e) => onSearch(e.target.value)}
