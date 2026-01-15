@@ -10,21 +10,35 @@ type AuthformProps = {
 
 export const AuthForm = ({ action, isRegister = false }: AuthformProps) => {
   const router = useRouter();
+
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); //  PREVENT PAGE RELOAD
+    e.preventDefault();
     setError(null);
-    setLoading(true);
 
     const formData = new FormData(e.currentTarget);
-    const result = await action(formData);
 
+    if (isRegister) {
+      const password = String(formData.get("password") || "");
+      const confirm = String(formData.get("confirm_password") || "");
+
+      if (password !== confirm) {
+        setError("Passwords do not match.");
+        return;
+      }
+    }
+
+    setLoading(true);
+    const result = await action(formData);
     setLoading(false);
 
     if (result?.error) {
-      setError(result.error); //  RED BOX SHOWS HERE
+      setError(result.error);
       return;
     }
 
@@ -41,41 +55,94 @@ export const AuthForm = ({ action, isRegister = false }: AuthformProps) => {
         </div>
       )}
 
+      {/* NAME */}
       {isRegister && (
         <div>
-          <label className="text-sm font-medium text-black">Name</label>
+          <label className="block text-sm font-medium text-black mb-1">
+            Name
+          </label>
           <input
             name="name"
             required
-            className="mt-1 w-full rounded-md border border-black px-3 py-2"
+            className="w-full rounded-md border border-black px-4 py-2"
+            placeholder="Your name"
           />
         </div>
       )}
 
+      {/* EMAIL */}
       <div>
-        <label className="text-sm font-medium text-black">Email</label>
+        <label className="block text-sm font-medium text-black mb-1">
+          Email
+        </label>
         <input
           name="email"
           type="email"
           required
-          className="mt-1 w-full rounded-md border border-black px-3 py-2"
+          className="w-full rounded-md border border-black px-4 py-2"
+          placeholder="you@example.com"
         />
       </div>
 
+      {/* PASSWORD */}
       <div>
-        <label className="text-sm font-medium text-black">Password</label>
-        <input
-          name="password"
-          type="password"
-          required
-          className="mt-1 w-full rounded-md border border-black px-3 py-2"
-        />
+        <label className="block text-sm font-medium text-black mb-1">
+          Password
+        </label>
+
+        <div className="relative">
+          <input
+            name="password"
+            type={showPassword ? "text" : "password"}
+            required
+            className="w-full rounded-md border border-black px-4 py-2 pr-10"
+            placeholder="Enter password"
+          />
+
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-black/60"
+            aria-label="Toggle password visibility"
+          >
+            {showPassword ? "🙈" : "👁️"}
+          </button>
+        </div>
       </div>
 
+      {/* CONFIRM PASSWORD (REGISTER ONLY) */}
+      {isRegister && (
+        <div>
+          <label className="block text-sm font-medium text-black mb-1">
+            Confirm Password
+          </label>
+
+          <div className="relative">
+            <input
+              name="confirm_password"
+              type={showConfirm ? "text" : "password"}
+              required
+              className="w-full rounded-md border border-black px-4 py-2 pr-10"
+              placeholder="Confirm password"
+            />
+
+            <button
+              type="button"
+              onClick={() => setShowConfirm((v) => !v)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-black/60"
+              aria-label="Toggle confirm password visibility"
+            >
+              {showConfirm ? "🙈" : "👁️"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* SUBMIT */}
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-lg bg-black py-3 text-white disabled:opacity-60"
+        className="w-full rounded-lg border border-black bg-black py-3 text-sm font-medium text-white disabled:opacity-60"
       >
         {loading ? "Loading..." : isRegister ? "Sign Up" : "Login"}
       </button>
