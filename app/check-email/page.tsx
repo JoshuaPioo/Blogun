@@ -1,9 +1,10 @@
 export default async function CheckEmailPage({
   searchParams,
 }: {
-  searchParams: { email?: string };
+  searchParams: Promise<{ email?: string }>;
 }) {
-  const email = searchParams.email || "";
+  const sp = await searchParams; // ✅ unwrap
+  const email = sp.email ?? "";
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-white px-4">

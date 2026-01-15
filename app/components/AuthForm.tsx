@@ -14,7 +14,7 @@ export const AuthForm = ({ action, isRegister = false }: AuthformProps) => {
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); // 🔑 PREVENT PAGE RELOAD
+    e.preventDefault(); //  PREVENT PAGE RELOAD
     setError(null);
     setLoading(true);
 
@@ -24,7 +24,7 @@ export const AuthForm = ({ action, isRegister = false }: AuthformProps) => {
     setLoading(false);
 
     if (result?.error) {
-      setError(result.error); // 🔴 RED BOX SHOWS HERE
+      setError(result.error); //  RED BOX SHOWS HERE
       return;
     }
 
