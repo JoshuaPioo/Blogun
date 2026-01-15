@@ -27,6 +27,7 @@ export default function NewPostPage() {
               name="title"
               className="mt-2 w-full rounded-xl border border-black/20 p-3"
               placeholder="Enter post title"
+              required
             />
           </div>
 
@@ -37,6 +38,7 @@ export default function NewPostPage() {
               className="mt-2 w-full rounded-xl border border-black/20 p-3"
               rows={10}
               placeholder="Write your post content..."
+              required
             />
           </div>
 
