@@ -172,7 +172,7 @@ export default function HomeClient(props: {
                 type="date"
                 name="date"
                 defaultValue={date}
-                className="absolute inset-0 h-full w-full opacity-0"
+                className="cursor-pointer absolute inset-0 h-full w-full opacity-0"
                 aria-label="Filter by date"
               />
 
@@ -213,7 +213,7 @@ export default function HomeClient(props: {
                 key={post.id}
                 type="button"
                 onClick={() => openPost(post)}
-                className="text-left rounded-2xl border border-black/10 p-6 transition hover:border-black/30"
+                className="cursor-pointer text-left rounded-2xl border border-black/10 p-6 transition hover:border-black/30 "
               >
                 <h3 className="text-xl font-semibold">
                   {highlightText(post.title, q)}

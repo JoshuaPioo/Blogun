@@ -185,7 +185,7 @@ export default async function DashboardPage({
                 type="date"
                 name="date"
                 defaultValue={date}
-                className="absolute inset-0 h-full w-full opacity-0"
+                className="cursor-pointer absolute inset-0 h-full w-full opacity-0"
               />
 
               <label
