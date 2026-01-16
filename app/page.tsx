@@ -9,6 +9,7 @@ type PostRow = {
   content: string;
   created_at: string;
   author_name: string | null;
+  image_url: string | null;
 };
 
 function manilaDayRangeISO(date: string) {
@@ -40,7 +41,10 @@ export default async function HomePage({
 
   let query = supabase
     .from("posts")
-    .select("id, title, content, created_at, author_name", { count: "exact" })
+    .select(
+    "id, title, content, author_name, created_at, image_url",
+    { count: "exact" }
+  )
     .order("created_at", { ascending: false });
 
   if (q) {

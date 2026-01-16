@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Comments from "../components/comments";
 
 type PostRow = {
   id: string;
@@ -9,14 +10,8 @@ type PostRow = {
   content: string;
   created_at: string;
   author_name: string | null;
+  image_url: string | null;
 };
-
-const PAGE_SIZE = 6;
-
-function excerpt(text: string, max = 160) {
-  const t = (text || "").trim();
-  return t.length > max ? t.slice(0, max).trimEnd() + "…" : t;
-}
 
 function escapeRegExp(input: string) {
   return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -30,11 +25,16 @@ function highlightText(text: string, q?: string) {
   const re = new RegExp(`(${escapeRegExp(query)})`, "ig");
   return text.split(re).map((part, i) =>
     part.toLowerCase() === query.toLowerCase() ? (
-      <mark key={i} className="rounded bg-black/10 px-1">
+      <mark
+        key={i}
+        className="rounded bg-black/10 px-1 break-words whitespace-normal"
+      >
         {part}
       </mark>
     ) : (
-      <span key={i}>{part}</span>
+      <span key={i} className="break-words whitespace-normal">
+        {part}
+      </span>
     )
   );
 }
@@ -95,17 +95,30 @@ export default function HomeClient(props: {
     setActivePost(null);
   };
 
-  // lock scroll when modal open (simple)
-  useMemo(() => {
-    if (typeof document === "undefined") return;
+  // lock scroll when modal open
+  useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
+  // ESC to close
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white overflow-x-hidden">
       {/* NAV */}
       <header className="border-b border-black/10">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 sm:px-6 py-4">
           <h1 className="text-lg font-semibold">Blogun</h1>
 
           {userExists ? (
@@ -135,63 +148,61 @@ export default function HomeClient(props: {
       </header>
 
       {/* CONTENT */}
-      <main className="mx-auto max-w-6xl px-6 py-10">
+      <main className="mx-auto max-w-6xl px-4 sm:px-6 py-8 sm:py-10">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 className="text-3xl font-semibold">Recent Posts</h2>
+            <h2 className="text-2xl sm:text-3xl font-semibold">Recent Posts</h2>
             <p className="mt-2 text-sm text-black/60">
               Read posts from the community
             </p>
           </div>
         </div>
 
-        {/* Modern filters */}
+        {/* Filters */}
         <form
           method="get"
           className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center"
         >
           <input type="hidden" name="page" value="1" />
 
-          {/* Search */}
-          <div className="relative w-full sm:flex-1">
+          <div className="relative w-full sm:flex-1 min-w-0">
             <SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-black/50" />
             <input
               name="q"
               defaultValue={q}
               placeholder="Search title, content, or author…"
-              className="w-full rounded-2xl border border-black/15 bg-white py-3 pl-10 pr-3 text-sm outline-none focus:border-black/40"
+              className="w-full min-w-0 rounded-2xl border border-black/15 bg-white py-3 pl-10 pr-3 text-sm outline-none focus:border-black/40"
             />
           </div>
 
-          {/* Date icon only */}
           <div className="flex items-center gap-2">
-            <div className="relative ">
-              {/* Hidden date input that still submits */}
+            <div className="relative">
               <input
                 ref={dateInputRef}
                 type="date"
                 name="date"
                 defaultValue={date}
-                className="cursor-pointer absolute inset-0 h-full w-full opacity-0"
+                className="absolute inset-0 h-full w-full opacity-0"
                 aria-label="Filter by date"
               />
 
               <button
                 type="button"
-                onClick={() => dateInputRef.current?.showPicker?.() || dateInputRef.current?.click()}
-                className="flex items-center justify-center rounded-2xl border border-black/15 bg-white p-3 text-black/70 outline-none hover:border-black/30 c"
+                onClick={() =>
+                  dateInputRef.current?.showPicker?.() ||
+                  dateInputRef.current?.click()
+                }
+                className="flex items-center justify-center rounded-2xl border border-black/15 bg-white p-3 text-black/70 outline-none hover:border-black/30"
                 title="Pick a date"
               >
                 <CalendarIcon className="h-5 w-5" />
               </button>
             </div>
 
-            {/* Apply */}
-            <button className="rounded-2xl bg-black px-5 py-3 text-sm font-medium text-white hover:opacity-90 cursor-pointer">
+            <button className="cursor-pointer rounded-2xl bg-black px-5 py-3 text-sm font-medium text-white hover:opacity-90">
               Apply
             </button>
 
-            {/* Clear */}
             {(q || date) && (
               <Link
                 href="/"
@@ -204,7 +215,7 @@ export default function HomeClient(props: {
         </form>
 
         {/* POSTS */}
-        <div className="mt-8 grid grid-cols-1 gap-4 hover:mouse-pointer">
+        <div className="mt-8 grid grid-cols-1 gap-4 sm:gap-6">
           {posts.map((post) => {
             const dateStr = new Date(post.created_at).toLocaleDateString();
 
@@ -213,17 +224,49 @@ export default function HomeClient(props: {
                 key={post.id}
                 type="button"
                 onClick={() => openPost(post)}
-                className="cursor-pointer text-left rounded-2xl border border-black/10 p-6 transition hover:border-black/30 "
+                className="cursor-pointer w-full min-w-0 text-left rounded-2xl border border-black/10 p-4 sm:p-6 transition hover:border-black/30 overflow-hidden"
               >
-                <h3 className="text-xl font-semibold">
+                {/* ✅ Title (your current good behavior): ~2 lines, no plugin */}
+                <h3
+                  className="
+                    min-w-0
+                    text-base sm:text-lg md:text-xl
+                    font-semibold
+                    leading-snug
+                    break-words
+                    overflow-hidden
+                    max-h-[3.2em]
+                  "
+                >
                   {highlightText(post.title, q)}
                 </h3>
 
-                <p className="mt-3 text-sm text-black/70">
-                  {highlightText(excerpt(post.content), q)}
+                {/* ✅ Content (same style logic as title, just different font/height) */}
+                <p
+                  className="
+                    mt-2 sm:mt-3
+                    min-w-0
+                    text-sm sm:text-base
+                    text-black/70
+                    leading-relaxed
+                    break-words
+                    overflow-hidden
+                    max-h-[4.5em] sm:max-h-[6em]
+                  "
+                >
+                  {highlightText(post.content, q)}
                 </p>
 
-                <p className="mt-4 text-xs text-black/70">
+                {post.image_url && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={post.image_url}
+                    alt=""
+                    className="mt-4 w-full max-h-[260px] object-cover rounded-2xl border border-black/10"
+                  />
+                )}
+
+                <p className="mt-4 text-xs text-black/70 break-words">
                   {highlightText(post.author_name ?? "Anonymous", q)} ·{" "}
                   {highlightText(dateStr, q)}
                 </p>
@@ -237,11 +280,10 @@ export default function HomeClient(props: {
         </div>
 
         {/* PAGINATION */}
-        <div className="mt-10 flex justify-center gap-2">
+        <div className="mt-10 flex flex-wrap justify-center gap-2">
           {Array.from({ length: totalPages }).map((_, i) => {
             const p = i + 1;
             const active = p === page;
-
             const href = `/?q=${encodeURIComponent(q)}&date=${date}&page=${p}`;
 
             return (
@@ -262,40 +304,53 @@ export default function HomeClient(props: {
       {/* MODAL */}
       {open && activePost && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 p-4 overflow-x-hidden"
           role="dialog"
           aria-modal="true"
           onMouseDown={(e) => {
-            // click outside to close
             if (e.target === e.currentTarget) close();
           }}
         >
-          {/* backdrop */}
           <div className="absolute inset-0 bg-black/40" />
 
-          {/* panel */}
-          <div className="relative z-10 w-full max-w-2xl rounded-3xl bg-white p-6 shadow-xl">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-semibold">{activePost.title}</h2>
-                <p className="mt-1 text-xs text-black/60">
-                  {activePost.author_name ?? "Anonymous"} ·{" "}
-                  {new Date(activePost.created_at).toLocaleString()}
-                </p>
+          <div className="relative mx-auto w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-xl">
+            <div className="sticky top-0 z-10 border-b border-black/10 bg-white p-5 sm:p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <h2 className="text-xl sm:text-2xl font-semibold break-words">
+                    {activePost.title}
+                  </h2>
+                  <p className="mt-1 text-xs text-black/60">
+                    {activePost.author_name ?? "Anonymous"} ·{" "}
+                    {new Date(activePost.created_at).toLocaleString()}
+                  </p>
+                </div>
+
+                <button
+                  onClick={close}
+                  className="shrink-0 rounded-2xl border border-black/15 px-3 py-2 text-sm hover:border-black/30"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+
+            <div className="max-h-[75vh] overflow-y-auto p-5 sm:p-6">
+              {activePost.image_url && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={activePost.image_url}
+                  alt=""
+                  className="mb-5 w-full max-h-[420px] object-cover rounded-2xl border border-black/10"
+                />
+              )}
+
+              <div className="whitespace-pre-wrap break-words text-sm leading-6 text-black/80">
+                {activePost.content}
               </div>
 
-              <button
-                onClick={close}
-                className="rounded-2xl border border-black/15 px-3 py-2 text-sm hover:border-black/30"
-              >
-                Close
-              </button>
+              <Comments postId={activePost.id} />
             </div>
-
-            <div className="mt-5 whitespace-pre-wrap text-sm leading-6 text-black/80">
-              {activePost.content}
-            </div>
-
           </div>
         </div>
       )}

@@ -10,10 +10,12 @@ type PostRow = {
   title: string;
   content: string;
   created_at: string;
+  image_url: string | null;
 };
 
 function excerpt(text: string, max = 160) {
-  return text.length > max ? text.slice(0, max).trimEnd() + "…" : text;
+  const t = (text || "").trim();
+  return t.length > max ? t.slice(0, max).trimEnd() + "…" : t;
 }
 
 function escapeRegExp(input: string) {
@@ -103,7 +105,7 @@ export default async function DashboardPage({
 
   let query = supabase
     .from("posts")
-    .select("id, title, content, created_at", { count: "exact" })
+    .select("id, title, content, created_at, image_url", { count: "exact" })
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
@@ -179,7 +181,6 @@ export default async function DashboardPage({
           {/* Date (icon only) */}
           <div className="flex items-center gap-2">
             <div className="relative">
-              {/* still submits date */}
               <input
                 id="date"
                 type="date"
@@ -219,13 +220,24 @@ export default async function DashboardPage({
               key={post.id}
               className="rounded-2xl border border-black/10 p-6 transition hover:border-black/20"
             >
-              <h3 className="text-xl font-semibold">
+              {/* ✅ Responsive title: wrap + clamp */}
+              <h3 className="text-xl font-semibold break-words line-clamp-2">
                 {highlightText(post.title, q)}
               </h3>
 
-              <p className="mt-3 text-sm text-black/70">
+              {/* ✅ Responsive content: wrap + clamp */}
+              <p className="mt-3 text-sm text-black/70 break-words line-clamp-3">
                 {highlightText(excerpt(post.content), q)}
               </p>
+
+              {post.image_url && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={post.image_url}
+                  alt=""
+                  className="mt-4 w-full max-h-[260px] object-cover rounded-2xl border border-black/10"
+                />
+              )}
 
               <div className="mt-4 flex items-center justify-between">
                 <p className="text-xs text-black/50">

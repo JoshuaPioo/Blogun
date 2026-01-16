@@ -1,6 +1,7 @@
 import { createClient } from "@/app/lib/supabase/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import Comments from "../../components/comments";
 
 type PostRow = {
   id: string;
@@ -45,6 +46,7 @@ export default async function PostPage({
         <article className="prose mt-6 max-w-none whitespace-pre-wrap">
           {p.content}
         </article>
+        <Comments postId={p.id} />
       </div>
     </main>
   );
