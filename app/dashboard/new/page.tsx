@@ -44,7 +44,7 @@ export default function NewPostPage() {
 
           <button
             type="submit"
-            className="w-full rounded-xl bg-black py-3 text-white"
+            className="w-full cursor-pointer rounded-xl bg-black py-3 text-white"
           >
             Create Post
           </button>

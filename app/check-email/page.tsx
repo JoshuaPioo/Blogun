@@ -1,24 +1,41 @@
-export default async function CheckEmailPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ email?: string }>;
-}) {
-  const sp = await searchParams; // ✅ unwrap
-  const email = sp.email ?? "";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+export default function CheckEmailPage() {
+  const router = useRouter();
+  const [seconds, setSeconds] = useState(5);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSeconds((s) => s - 1);
+    }, 1000);
+
+    const timeout = setTimeout(() => {
+      router.push("/dashboard");
+    }, 5000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, [router]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-white px-4">
-      <div className="w-full max-w-md rounded-lg border border-black bg-white p-8 text-center space-y-3">
-        <h1 className="text-2xl font-semibold text-black">Confirm your email</h1>
+      <div className="w-full max-w-md rounded-lg border border-black bg-white p-8 text-center space-y-4">
+        <h1 className="text-2xl font-semibold text-black">
+          Success ✅
+        </h1>
+
         <p className="text-sm text-black">
-          We sent a confirmation link to{" "}
-          <span className="font-medium">{email}</span>.
+          Your account was created successfully.
         </p>
-        <p className="text-sm text-black">
-          Please open your Gmail and click the link to activate your account.
-        </p>
+
         <p className="text-xs text-black/70">
-          If you don’t see it, check Spam/Promotions.
+          Redirecting to dashboard {" "}
+          <span className="font-medium">{seconds}</span> seconds…
         </p>
       </div>
     </div>

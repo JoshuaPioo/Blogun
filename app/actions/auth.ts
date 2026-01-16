@@ -7,7 +7,6 @@ import { supabaseAdmin } from "../lib/supabase/admin";
 
 export const signIn = async (formData: FormData) => {
   const supabase = await createClient();
-
   const email = String(formData.get("email") || "")
     .trim()
     .toLowerCase();
@@ -21,12 +20,36 @@ export const signIn = async (formData: FormData) => {
   redirect("/dashboard");
 };
 
+  
+ function friendlyAuthError(message: string) {
+   const msg = (message || "").toLowerCase();
+
+   // Password policy (weak password / complexity)
+   if (msg.includes("password")) {
+     return "Password must be at least 6 characters and include: 1 uppercase, 1 lowercase, 1 number, and 1 symbol.";
+   }
+
+   // Invalid email format
+   if (
+     msg.includes("email") &&
+     (msg.includes("invalid") || msg.includes("format"))
+   ) {
+     return "Please enter a valid email address.";
+   }
+
+   // Login credentials
+   if (msg.includes("invalid login credentials")) {
+     return "Incorrect email or password.";
+   }
+
+   return "Something went wrong. Please try again.";
+ }
 
  async function emailExists(email: string) {
    const target = email.toLowerCase().trim();
 
    let page = 1;
-   const perPage = 200; // max-ish batch
+   const perPage = 200;
 
    while (true) {
      const { data, error } = await supabaseAdmin.auth.admin.listUsers({
@@ -40,11 +63,9 @@ export const signIn = async (formData: FormData) => {
      const found = users.some((u) => (u.email ?? "").toLowerCase() === target);
      if (found) return true;
 
-     // if less than perPage, no more pages
      if (users.length < perPage) return false;
 
      page++;
-     // safety: avoid infinite loop (super unlikely)
      if (page > 50) return false;
    }
  }
@@ -53,14 +74,16 @@ export const signIn = async (formData: FormData) => {
    const supabase = await createClient();
 
    const name = String(formData.get("name") || "").trim();
-   const email = String(formData.get("email") || "").trim();
+   const email = String(formData.get("email") || "")
+     .trim()
+     .toLowerCase();
    const password = String(formData.get("password") || "");
 
    if (!name || !email || !password) {
      return { error: "All fields are required." };
    }
 
-   // ✅ Duplicate check (works on older supabase-js types)
+   //  Duplicate check
    try {
      const exists = await emailExists(email);
      if (exists) {
@@ -70,7 +93,7 @@ export const signIn = async (formData: FormData) => {
      return { error: e?.message ?? "Duplicate check failed." };
    }
 
-   // ✅ Proceed signup (keeps verification link)
+   //  Proceed signup (keeps verification link)
    const { error } = await supabase.auth.signUp({
      email,
      password,
@@ -81,7 +104,8 @@ export const signIn = async (formData: FormData) => {
    });
 
    if (error) {
-     return { error: error.message };
+     //  show friendly message instead of long Supabase policy text
+     return { error: friendlyAuthError(error.message) };
    }
 
    return { ok: true };
