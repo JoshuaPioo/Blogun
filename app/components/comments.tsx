@@ -1,16 +1,12 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import {
-  createComment,
-  deleteComment,
-  getComments,
-  type CommentRow,
-} from "../actions/comments";
+import { createComment, deleteComment, getComments, type CommentRow } from "../actions/comments";
 
 export default function Comments({ postId }: { postId: string }) {
   const [comments, setComments] = useState<CommentRow[]>([]);
   const [text, setText] = useState("");
+  const [fileName, setFileName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -48,23 +44,26 @@ export default function Comments({ postId }: { postId: string }) {
       {/* Add comment */}
       <form
         className="mt-4 space-y-3"
-        onSubmit={(e) => {
-          e.preventDefault();
+        action={(formData) => {
           setError(null);
 
-          const body = text.trim();
-          if (!body) {
-            setError("Comment is required.");
-            return;
-          }
+          formData.set("postId", postId);
+          formData.set("body", text);
 
           startTransition(async () => {
-            const res = await createComment({ postId, body });
+            const res = await createComment(formData);
+
             if (res?.error) {
               setError(res.error);
               return;
             }
+
             setText("");
+            setFileName("");
+            // reset file input
+            const fileInput = document.getElementById("comment-image") as HTMLInputElement | null;
+            if (fileInput) fileInput.value = "";
+
             load();
           });
         }}
@@ -78,6 +77,37 @@ export default function Comments({ postId }: { postId: string }) {
           required
         />
 
+        {/* Photo upload (same style as posts) */}
+        <div>
+          <label className="text-sm font-medium">Photo (optional)</label>
+
+          <label
+            htmlFor="comment-image"
+            className={`mt-2 flex cursor-pointer items-center justify-center rounded-xl border px-4 py-4 text-sm transition
+              ${
+                fileName
+                  ? "border-black bg-black text-white"
+                  : "border-dashed border-black/30 bg-white text-black/70 hover:border-black hover:text-black"
+              }`}
+          >
+            {fileName ? `Selected: ${fileName}` : "Click to upload image"}
+          </label>
+
+          <input
+            id="comment-image"
+            name="image"
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              setFileName(f?.name ?? "");
+            }}
+          />
+
+          <p className="mt-2 text-xs text-black/50">Max 2MB. PNG/JPG/WebP.</p>
+        </div>
+
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <button
             type="submit"
@@ -86,32 +116,29 @@ export default function Comments({ postId }: { postId: string }) {
           >
             {isPending ? "Posting..." : "Post Comment"}
           </button>
-
-          <p className="text-xs text-black/50">
-            Tip: long words will wrap automatically.
-          </p>
         </div>
       </form>
 
       {/* List */}
       <div className="mt-6 space-y-4">
         {comments.map((c) => (
-          <article
-            key={c.id}
-            className="rounded-2xl border border-black/10 p-4 sm:p-5"
-          >
-            {/* Mobile: stack. Desktop: row. */}
+          <article key={c.id} className="rounded-2xl border border-black/10 p-4 sm:p-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              {/* IMPORTANT: min-w-0 allows wrapping inside flex */}
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium break-words">
-                  {c.author_name ?? "User"}
-                </p>
+                <p className="text-sm font-medium break-words">{c.author_name ?? "User"}</p>
 
-                {/* Handles long text safely */}
                 <p className="mt-1 text-sm text-black/80 leading-6 whitespace-pre-wrap break-words overflow-hidden">
                   {c.body}
                 </p>
+
+                {c.image_url && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={c.image_url}
+                    alt=""
+                    className="mt-3 w-full max-h-[260px] object-cover rounded-2xl border border-black/10"
+                  />
+                )}
 
                 <p className="mt-2 text-xs text-black/50 break-words">
                   {new Date(c.created_at).toLocaleString()}
@@ -141,9 +168,7 @@ export default function Comments({ postId }: { postId: string }) {
           </article>
         ))}
 
-        {comments.length === 0 && (
-          <p className="text-sm text-black/60">No comments yet.</p>
-        )}
+        {comments.length === 0 && <p className="text-sm text-black/60">No comments yet.</p>}
       </div>
     </section>
   );

@@ -21,6 +21,7 @@ export type CommentRow = {
   user_id: string | null;
   author_name: string | null;
   body: string;
+  image_url: string | null;
   created_at: string;
 };
 
@@ -31,7 +32,7 @@ export async function getComments(
 
   const { data, error } = await supabase
     .from("comments")
-    .select("id, post_id, user_id, author_name, body, created_at")
+    .select("id, post_id, user_id, author_name, body, image_url, created_at")
     .eq("post_id", postId)
     .order("created_at", { ascending: false });
 
@@ -39,7 +40,9 @@ export async function getComments(
   return { data: (data ?? []) as CommentRow[] };
 }
 
-export async function createComment(input: { postId: string; body: string }) {
+export async function createComment(
+  formData: FormData
+): Promise<{ ok?: true; error?: string }> {
   const supabase = await createClient();
 
   const {
@@ -48,23 +51,49 @@ export async function createComment(input: { postId: string; body: string }) {
   } = await supabase.auth.getUser();
   if (userError || !user) return { error: "Please login to comment." };
 
-  const body = input.body.trim();
+  const postId = String(formData.get("postId") || "").trim();
+  const body = String(formData.get("body") || "").trim();
+
+  if (!postId) return { error: "Missing post id." };
   if (!body) return { error: "Comment is required." };
+
+  // optional image
+  const file = formData.get("image") as File | null;
+  let image_url: string | null = null;
+
+  if (file && file.size > 0) {
+    if (!file.type.startsWith("image/")) return { error: "Image file only." };
+
+    const MAX_BYTES = 2 * 1024 * 1024;
+    if (file.size > MAX_BYTES) return { error: "Image is too large. Max 2MB." };
+
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("comment-images")
+      .upload(path, file, { upsert: false, contentType: file.type });
+
+    if (uploadError) return { error: uploadError.message };
+
+    image_url = supabase.storage.from("comment-images").getPublicUrl(path)
+      .data.publicUrl;
+  }
 
   const author_name = getDisplayName(user);
 
   const { error } = await supabase.from("comments").insert({
-    post_id: input.postId,
+    post_id: postId,
     user_id: user.id,
     author_name,
     body,
+    image_url,
   });
 
   if (error) return { error: error.message };
 
-  // Refresh pages that show comments
   revalidatePath("/");
-  revalidatePath(`/post/${input.postId}`);
+  revalidatePath(`/post/${postId}`);
 
   return { ok: true };
 }
@@ -77,7 +106,6 @@ export async function deleteComment(input: { id: string; postId: string }) {
   } = await supabase.auth.getUser();
   if (!user) return { error: "Please login." };
 
-  // RLS will ensure only owner can delete
   const { error } = await supabase.from("comments").delete().eq("id", input.id);
   if (error) return { error: error.message };
 
