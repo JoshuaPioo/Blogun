@@ -1,27 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-
 export default function CheckEmailPage() {
-  const router = useRouter();
-  const [seconds, setSeconds] = useState(5);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setSeconds((s) => s - 1);
-    }, 1000);
-
-    const timeout = setTimeout(() => {
-      router.push("/dashboard");
-    }, 5000);
-
-    return () => {
-      clearInterval(interval);
-      clearTimeout(timeout);
-    };
-  }, [router]);
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-white px-4">
       <div className="w-full max-w-md rounded-lg border border-black bg-white p-8 text-center space-y-4">
@@ -34,8 +13,7 @@ export default function CheckEmailPage() {
         </p>
 
         <p className="text-xs text-black/70">
-          Redirecting to dashboard {" "}
-          <span className="font-medium">{seconds}</span> seconds…
+          Please check your email and verify your account to continue.
         </p>
       </div>
     </div>

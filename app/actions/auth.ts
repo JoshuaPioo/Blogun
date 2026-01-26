@@ -104,11 +104,10 @@ export const signIn = async (formData: FormData) => {
    });
 
    if (error) {
-     //  show friendly message instead of long Supabase policy text
      return { error: friendlyAuthError(error.message) };
    }
 
-   return { ok: true };
+   redirect("/check-email");
  }
 
 
